@@ -1,0 +1,27 @@
+.selectYear {
+    width: 140px;
+    height: 40px;
+}
+.selectYear .ant-select-selector {
+    height: 40px !important;
+}
+.selectYear .ant-select-arrow {
+    top: 50%;
+    transform: translateY(-50%);
+    margin-top: 0;
+}
+.selectYear .ant-select-selector .ant-select-selection-item {
+    line-height: 40px;
+}
+.selectYear.ant-select-open .ant-select-arrow {
+    transform: rotate(180deg);
+    top: 43%;
+    right: 7px;
+}
+
+/* fixing arrow rotate on opened common select */
+.CommonSelect__select--bordered.ant-select-open .ant-select-arrow, .CommonSelect__select.ant-select-open .ant-select-arrow {
+    transform: rotate(180deg);
+    top: 60%;
+    right: 7px;
+}

@@ -1,0 +1,81 @@
+.new-atm-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.new-atm-container .location-search-item {
+  display: flex;
+  flex-direction: row;
+  margin-top: 20px;
+  justify-content: space-between;
+}
+
+.new-atm-container .button-submit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.new-atm-container .button-submit .saved-button {
+  color: red;
+  background-color: white;
+  border: none;
+}
+
+.new-atm-container .input-form {
+  margin-top: 10px;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-bottom: 15px;
+  height: 40px;
+}
+
+.ant-input-affix-wrapper {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  padding: 4px 11px;
+  color: rgba(0, 0, 0, 0.85);
+  font-size: 14px;
+  line-height: 1.5715;
+  background-color: #fff;
+  background-image: none;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px 6px 6px 6px;
+  transition: all 0.3s;
+  display: inline-flex;
+}
+
+.ant-input-group-addon {
+  position: relative;
+  padding: 0 11px;
+  color: #bcc8e7;
+  font-weight: normal;
+  font-size: 14px;
+  text-align: center;
+  background-color: #e6eaf3;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px 6px 6px 6px;
+  transition: all 0.3s;
+  width: 50px;
+}
+
+.new-atm-container .requester-form {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.new-atm-container .requester-form .requester-button {
+  width: 100%;
+  height: 40px;
+  background-color: #dc241f;
+  border: solid white 1px;
+}
+
+.new-atm-container .location-search-item .location-button {
+  width: 100%;
+  height: 40px;
+  /* background-color: #DC241F; */
+  border: solid white 1px;
+}

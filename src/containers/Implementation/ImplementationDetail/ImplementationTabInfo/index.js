@@ -1,0 +1,938 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
+/* eslint-disable array-callback-return */
+/* eslint-disable consistent-return */
+/* eslint-disable jsx-a11y/alt-text */
+/* eslint-disable react/forbid-prop-types */
+/* eslint-disable react/require-default-props */
+import {
+  Grid,
+  Paper,
+  Tab,
+  Table,
+  TableCell,
+  TableRow,
+  Tabs,
+  Typography,
+  Box,
+  Link,
+} from "@material-ui/core";
+import { makeStyles } from "@material-ui/styles";
+import PropTypes from "prop-types";
+import Slider from "react-slick";
+import React, { useState, useEffect } from "react";
+import { Map, TileLayer, Marker, ZoomControl } from "react-leaflet";
+import moment from "moment";
+import FullscreenControl from 'react-leaflet-fullscreen';
+import { Button, Modal } from "antd";
+import constants from "../../../../helpers/constants";
+import getMinioFile from "../../../../helpers/getMinioFile";
+import LoadingView from "../../../../components/Loading/LoadingView";
+import { SuccessMedium, SuccessSoft } from "../../../../assets/theme/colors";
+import useTimestampConverter from '../../../../helpers/useTimestampConverter';
+
+const useStyles = makeStyles({
+  root: {
+    width: "100%",
+    "& .MuiPaper-elevation1": {
+      boxShadow: "0px 6px 6px rgba(232, 238, 255, 0.3)",
+    },
+  },
+  paper: { padding: 10 },
+  // Tabs Style
+  rootTabs: {
+    minHeight: 40,
+    backgroundColor: constants.color.grayUltraSoft,
+    borderRadius: 10,
+    color: constants.color.grayMedium,
+    width: "fit-content",
+    position: "relative",
+    left: "10%",
+  },
+  tabsIndicator: {
+    display: "none",
+  },
+  rootItemTabs: {
+    minHeight: 40,
+    minWidth: 72,
+    padding: "7px 10px",
+    fontSize: 13,
+  },
+  selectedTabItem: {
+    backgroundColor: constants.color.primaryHard,
+    color: constants.color.white,
+  },
+  wrapperTabItem: {
+    textTransform: "none",
+  },
+  tableRow: {
+    "& .MuiTableCell-sizeSmall": { padding: 2 },
+  },
+  tableCell: {
+    borderBottom: "unset",
+    fontSize: 13,
+  },
+  sliderContainer: {
+    display: "block",
+    marginLeft: "auto",
+    marginRight: "auto",
+    width: 180,
+    "& .slick-prev:before": {
+      color: constants.color.primaryHard,
+    },
+    "& .slick-next:before": {
+      color: constants.color.primaryHard,
+    },
+    "& .MuiSvgIcon-root": {
+      color: "black",
+      backgroundColor: "#00000024",
+      borderRadius: 20,
+    },
+  },
+  maps: {
+    height: "100%",
+    width: "100%",
+    backgroundColor: constants.color.graySoft,
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  mapContainer: {
+    width: "100%",
+    height: 200,
+    marginTop: 5,
+  },
+  select: {
+    "& .MuiSelect-icon": {
+      top: "unset",
+      right: 5,
+    },
+  },
+  tableTextBold: {
+    fontFamily: "Barlow",
+    fontWeight: 600,
+    fontSize: 15,
+    borderBottom: "unset",
+  },
+  tableTextTot: {
+    fontFamily: "Barlow",
+    fontWeight: 700,
+    fontSize: 13,
+    borderBottom: "unset",
+  },
+});
+
+const dataAtmDummy = {};
+
+function TabPanel(props) {
+  const { children, value, index, ...other } = props;
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`content-tabpanel-${index}`}
+      aria-labelledby={`content-tab-${index}`}
+      {...other}
+    >
+      {value === index && <div>{children}</div>}
+    </div>
+  );
+}
+
+TabPanel.propTypes = {
+  children: PropTypes.node,
+  index: PropTypes.any.isRequired,
+  value: PropTypes.any.isRequired,
+};
+
+const setStringValue = (value) => {
+  if (value === null) {
+    return "-";
+  }
+  if (value === "") {
+    return "-";
+  }
+  if (value === undefined) {
+    return "-";
+  }
+  return value;
+};
+
+function stripeMedia(mediaString){
+  if(mediaString?.length > 0){
+    return mediaString.replace(/\[|\]|\"/g,"");
+  }
+  return "-";
+}
+
+function isEmpty(obj) {
+  for (const x in obj) {
+    if (obj.hasOwnProperty(x)) return false;
+  }
+  return true;
+}
+
+const RenderImageSlider = ({ filePath, filename }) => {
+  const [imageSlider, seImageSlider] = useState(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    try {
+      getMinioFile(filePath).then((result) => {
+        // console.log(">>>> try getMinio Offering ", JSON.stringify(result));
+        seImageSlider(result);
+      });
+    } catch (err) {
+      console.log(">>>> Error try getMinio", err);
+    }
+  }, []);
+  useEffect(() => {
+    // console.log(">>>> imageSlider: ", imageSlider);
+  }, [imageSlider]);
+  return (
+    <div style={{ textAlign: "center" }}>
+      {imageSlider !== null && (
+        <>
+          <Typography>{filename}</Typography>
+          <Link onClick={()=>setOpen(true)} >
+            <div style={{ height: 180, width: 180}}>
+              <img src={imageSlider.fileUrl} alt="img" style={{ width: "100%", margin: "auto", display: "block", objectFit: "cover"}} />
+            </div>
+          </Link>
+          <Modal 
+            centered 
+            visible={open}
+            onCancel={()=>setOpen(false)} 
+            footer={[
+              <Button  key="submit" type="primary" onClick={()=>window.open(imageSlider.fileUrl,'_blank')}>
+                Download
+              </Button>]}
+            zIndex={2000}>
+            <img src={imageSlider.fileUrl} style={{width: "100%"}} alt="img"/>
+          </Modal>
+        </>
+      )}
+    </div>
+  );
+};
+RenderImageSlider.propTypes = {
+  filePath: PropTypes.string.isRequired,
+  filename: PropTypes.string.isRequired,
+};
+
+// DEFAULT EXPORT
+const ImplementationTabInfo = (props) => {
+  const classes = useStyles();
+  const { data, idAtm, isLoadData } = props;
+
+  const tabsStyles = {
+    root: classes.rootTabs,
+    indicator: classes.tabsIndicator,
+  };
+  const tabItemStyles = {
+    root: classes.rootItemTabs,
+    selected: classes.selectedTabItem,
+    wrapper: classes.wrapperTabItem,
+  };
+  // PHOTOS
+  const [dataPhotos, setDataPhotos] = useState([]);
+  const [operasionalStart, setOperasionalStart] = useState([]);
+
+  // TABS
+  const [selectedTab, setSelectedTab] = useState(0);
+  const handleSelectedTab = (event, newValue) => {
+    event.preventDefault();
+    setSelectedTab(newValue);
+    if (newValue === 0) {
+      console.log("Tab Current 0");
+    } else if (newValue === 1) {
+      console.log("Tab Current 1");
+    } else if (newValue === 2) {
+      console.log("Tab Current 2");
+    } else {
+      console.log("Tab Default");
+    }
+  };
+  const settingsSlider = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    arrows: false,
+  };
+
+  const locationMarker = (lat, long) => {
+    if (lat === null || long === null) {
+      return [-6.229728, 106.6894312];
+    }
+    return [lat, long];
+  };
+
+  useEffect(() => {
+    if (isEmpty(data) === false) {
+      // try {
+      //   if (data.implementationInformation.locationMachinePhotos !== null) {
+      //     setDataPhotos((prevData) => {
+      //       return [
+      //         ...prevData,
+      //         {path: data.implementationInformation.locationMachinePhotos, header: "Posisi Mesin"}
+      //       ];
+      //     });
+      //   }
+      //   if (data.implementationInformation.locationFrontMachinePhoto !== null) {
+      //     setDataPhotos((prevData) => {
+      //       return [
+      //         ...prevData,
+      //         {path: data.implementationInformation.locationFrontMachinePhoto, header: "Tampak Muka"}
+      //       ];
+      //     });
+      //   }
+      // } 
+      try {
+        if (data.implementationInformation.locationMachinePhotos !== null) {
+          if (data.implementationInformation.locationMachinePhotos !== "") {
+            setDataPhotos((prevData) => {
+              return [
+                ...prevData,
+                {path: data.implementationInformation.locationMachinePhotos, header: "Lokasi Mesin"},
+              ];
+            });
+          }
+        }
+        if (data.implementationInformation.locationFrontMachinePhoto !== null) {
+          if (data.implementationInformation.locationFrontMachinePhoto !== "") {
+            setDataPhotos((prevData) => {
+              return [
+                ...prevData,
+                {path: data.implementationInformation.locationFrontMachinePhoto, header: "Tampak Muka"},
+              ];
+            });
+          }
+        }
+        if (data.implementationInformation.locationPhotosPositionNeonSign !== null) {
+          if (data.implementationInformation.locationPhotosPositionNeonSign !== "") {
+            setDataPhotos((prevData) => {
+              return [
+                ...prevData,
+                {path: data.implementationInformation.locationPhotosPositionNeonSign, header: "Posisi Neon Sign"},
+              ];
+            });
+          }
+        }
+        if (data.implementationInformation.locationPhotosPositionAtenaVsat !== null) {
+          if (data.implementationInformation.locationPhotosPositionAtenaVsat !== "") {
+            setDataPhotos((prevData) => {
+              return [
+                ...prevData,
+                {path: data.implementationInformation.locationPhotosPositionAtenaVsat, header: "Posisi Antena Vsat"},
+              ];
+            });
+          }
+        }
+      }catch (err) {
+        alert("Error get minio images: ", err);
+      }
+    }
+  }, [data]);
+  // useEffect(() => {
+  //   console.log(">>>> Images dataPhotos: ", dataPhotos);
+  // }, [dataPhotos]);
+  return (
+    <div className={classes.root}>
+      <Paper className={classes.paper}>
+        <Grid container spacing={2} alignItems="center" justify="space-between">
+          <Grid item sm={3}>
+            <Typography style={{ fontSize: 28 }}>
+              ATM {isEmpty(data) ? "-" : (data.implementationInformation.locationId || data.implementationInformation.atmId)}
+            </Typography>
+          </Grid>
+          <Grid item sm={7}>
+            <Tabs
+              classes={tabsStyles}
+              value={selectedTab}
+              onChange={handleSelectedTab}
+              centered
+            >
+              <Tab classes={tabItemStyles} label="Informasi Umum" />
+              <Tab classes={tabItemStyles} label="Location" />
+              <Tab classes={tabItemStyles} label="Detail" />
+            </Tabs>
+          </Grid>
+          <Grid item>
+            {/* {isEmpty(data) ? '-' : renderType(data.implementationInformation.openingType) } */}
+            <Box
+              style={{
+                textAlign: "center",
+                border: "1px solid",
+                borderColor: SuccessMedium,
+                background: SuccessSoft,
+                color: SuccessMedium,
+                borderRadius: 6,
+                padding: 5,
+                height: 33,
+              }}
+            >
+              <Typography style={{ fontSize: 14, fontFamily: "Barlow" }}>
+                {isEmpty(data)
+                  ? "-"
+                  : setStringValue(data.implementationInformation.openingType)}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+        {isLoadData ? (
+          <LoadingView maxheight="100%" />
+        ) : (
+          <div style={{ marginTop: 10 }}>
+            <TabPanel value={selectedTab} index={0}>
+              <Grid container spacing={2}>
+                <Grid item className={classes.gridContent} xs={3}>
+                  <div className={classes.sliderContainer}>
+                    {dataPhotos.length > 0 ? (
+                      <Slider {...settingsSlider}>
+                        {dataPhotos.map((image) => {
+                          return <RenderImageSlider filePath={image.path} filename={image.header} />;
+                        })}
+                      </Slider>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                </Grid>
+                <Grid item className={classes.gridContent} xs={5}>
+                  <Table size="small">
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Kondisi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.condition
+                          )}{" "}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Nama Lokasi / ID
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.locationName
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Alamat
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.locationAddress
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        PIC Lokasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.picLocationName
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        No HP PIC Lokasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation
+                              .picLocationTelephoneNumber
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Email PIC Lokasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.picLocationEmail
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Nama Penandatangan LOO / MOU
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.landlordName
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="50%" className={classes.tableCell}>
+                        NO HP Penandatangan LOO / MOU
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation
+                              .landlordTelephoneNumber
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Email Penandatangan LOO / MOU
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.landlordEmail
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Kode GFMS
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.codeGfms
+                          )}
+                      </TableCell>
+                    </TableRow>
+                  </Table>
+                </Grid>
+                <Grid item className={classes.gridContent} xs={4}>
+                  <Table size="small">
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        ID Requester
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(data.implementationInformation.idRequester)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        PIC Request
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(data.implementationInformation.requesterName)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        No HP PIC Request
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(data.implementationInformation.requesterTelephoneNumber)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Email PIC Request
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(data.implementationInformation.requesterEmail)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Initial Cabang
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(data.implementationInformation.branchInitial)}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Kategori Lokasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.locationMode
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Tipe Lokasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.locationType
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Populasi ATM
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.atmPopulation
+                          )} ATM
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Tipe ATM
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.machineType
+                          )}
+                      </TableCell>
+                    </TableRow>
+                  </Table>
+                </Grid>
+              </Grid>
+            </TabPanel>
+            <TabPanel value={selectedTab} index={1}>
+              {/* <Typography>Location</Typography> */}
+              <Grid container justify="center">
+                <Grid item xs={12}>
+                  <Box className={classes.mapContainer}>
+                    <Map
+                      className={classes.maps}
+                      center={
+                        isEmpty(data)
+                          ? [-6.229728, 106.6894312]
+                          : locationMarker(
+                            data.implementationInformation.latitude,
+                            data.implementationInformation.longitude
+                          )
+                      }
+                      zoom={80}
+                      scrollWheelZoom={false}
+                      zoomControl={false}
+                    >
+                      <FullscreenControl position="bottomright" />
+                      <TileLayer
+                        attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+                        url="http://{s}.tile.osm.org/{z}/{x}/{y}.png"
+                      />
+                      <Marker
+                        position={
+                          isEmpty(data)
+                            ? [-6.229728, 106.6894312]
+                            : locationMarker(
+                              data.implementationInformation.latitude,
+                              data.implementationInformation.longitude
+                            )
+                        }
+                      />
+                      <ZoomControl position="topright" />
+                    </Map>
+                  </Box>
+                </Grid>
+              </Grid>
+            </TabPanel>
+            <TabPanel value={selectedTab} index={2}>
+              <Grid container spacing={2}>
+                <Grid item className={classes.gridContent} xs={2}>
+                  <div className={classes.sliderContainer}>
+                    {dataPhotos.length > 0 ? (
+                      <Slider {...settingsSlider}>
+                        {dataPhotos.map((image) => {
+                          return <RenderImageSlider filePath={image.path} filename={image.header} />;
+                        })}
+                      </Slider>
+                    ) : (
+                      "-"
+                    )}
+                  </div>
+                </Grid>
+                <Grid item className={classes.gridContent} xs={5}>
+                  <Table size="small">
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Tipe Lokasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.locationType
+                          )}{" "}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Ruang ATM
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.boothType
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Luas Area ATM
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.buildingLarge
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Akses Umum
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.publicAccessibility
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Notes Akses Umum
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.publicAccessbilityNote
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Operasional
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : `${data.implementationInformation.startWorkHour} - ${data.implementationInformation.endWorkHour}`}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Jumlah ATM Bank Lain
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.aroundAtm
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Denom
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.denom
+                          )}
+                      </TableCell>
+                    </TableRow>
+                  </Table>
+                </Grid>
+                <Grid item className={classes.gridContent} xs={5}>
+                  <Table size="small">
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        AC
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.acType
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Kebersihan
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.cleanType
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Jenis Komunikasi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.commType
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Media Promosi
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : stripeMedia(
+                            data.implementationInformation.mediaPromotion
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Notes
+                      </TableCell>
+                      <TableCell className={classes.tableCell}>
+                        :{" "}
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.mediaPromotionNote
+                          )}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Nomor Meteran
+                      </TableCell>
+                      <TableCell className={classes.tableCell}> 
+                        :{" "} 
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.electricNumber
+                          )} </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Atas Nama
+                      </TableCell>
+                      <TableCell className={classes.tableCell}> 
+                        :{" "} 
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.electricityOwnerName
+                          )} </TableCell>
+                    </TableRow>
+                    <TableRow className={classes.tableRow}>
+                      <TableCell width="40%" className={classes.tableCell}>
+                        Listrik per Tahun
+                      </TableCell>
+                      <TableCell className={classes.tableCell}> 
+                        :{" "} 
+                        {isEmpty(data)
+                          ? "-"
+                          : setStringValue(
+                            data.implementationInformation.yearlyElectricityCost
+                          )} </TableCell>
+                    </TableRow>
+                  </Table>
+                </Grid>
+              </Grid>
+            </TabPanel>
+          </div>
+        )}
+      </Paper>
+    </div>
+  );
+};
+
+ImplementationTabInfo.propTypes = {
+  // eslint-disable-next-line react/forbid-prop-types
+  data: PropTypes.object,
+  idAtm: PropTypes.string,
+  isLoadData: PropTypes.bool,
+};
+
+ImplementationTabInfo.defaultProps = {
+  data: dataAtmDummy,
+  idAtm: "",
+  isLoadData: false,
+};
+
+export default ImplementationTabInfo;

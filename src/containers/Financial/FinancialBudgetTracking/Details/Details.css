@@ -1,0 +1,7 @@
+.MuiTableCell-stickyHeader {
+    position: unset !important;
+}
+
+.MuiTableCell-sizeSmall {
+    padding: 5px 10px !important;
+}

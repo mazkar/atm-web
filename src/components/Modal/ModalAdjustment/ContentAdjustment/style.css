@@ -1,0 +1,14 @@
+.input-budget {
+    width: 240px;
+    height: 45px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #BCC8E7;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    outline: none;
+    font-family: 'Barlow';
+    font-size: 20px;
+    font-weight: 500;
+    text-align: end;
+}

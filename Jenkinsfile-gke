@@ -1,0 +1,118 @@
+def buildNumber = env.BUILD_NUMBER as int
+if (buildNumber > 1) milestone(buildNumber - 1)
+milestone(buildNumber)
+
+def micrositeName = ''
+def git_repo = "https://code.mylabzolution.com/atm-business/atm-business-web.git"
+
+def namespace = 'atm-dev'
+
+def git_branch = 'development'
+
+def env = 'web-ssl-gke'
+
+def nexus_base_url = 'https://library.mylabzolution.com'
+def nexus_deps_repo = "$nexus_base_url/repository/mvn_atm_dev/"
+def nexus_deploy_repo = "$nexus_base_url/repository/atm_dev/"
+
+def appName
+def appFullVersion
+def gitCommitId
+
+node ('nodejs') {
+   stage ('Checkout'){
+      git url: "${git_repo}", branch: "${git_branch}", credentialsId: 'gagah'
+   }
+
+   stage ('Prepare'){
+     withCredentials([[$class: 'UsernamePasswordMultiBinding',
+         credentialsId: 'nexus',
+         usernameVariable: 'nexus_username', passwordVariable: 'nexus_password']]) {
+               sh """
+                  echo 'Downloading ci-cd templates...'
+                  rm -rf ./cicd-template
+                  curl --fail -u ${nexus_username}:${nexus_password} -o cicd-template-${env}.tar.gz ${nexus_base_url}/repository/general-ist/cicd-template-${env}.tar.gz
+                  mkdir cicd-template && tar -xzvf ./cicd-template-${env}.tar.gz -C "\$(pwd)/cicd-template"
+                  """
+      }
+
+      appName = sh( script: 'node -e "console.log(require(\'./package.json\').name);"', returnStdout: true).trim()
+      appFullVersion = sh( script: 'node -e "console.log(require(\'./package.json\').version);"', returnStdout: true).trim()
+      appFullVersion = appFullVersion.substring(0, appFullVersion.lastIndexOf('.')) + ".${BUILD_NUMBER}"
+      appMajorVersion = appFullVersion.substring(0, appFullVersion.indexOf('.'))
+      gitCommitId = sh(returnStdout: true, script: 'git rev-parse HEAD').trim()
+      parameterTemplatedeployment(appName, appMajorVersion, appFullVersion)
+      parameterTemplateingress(appName, appMajorVersion, micrositeName)
+
+
+      //sh 'sed -i \'s/ENVIRONMENT = "local"/ENVIRONMENT = "dev"/g\' ./src/config.js'
+   }
+   //stage ('Install Dependencies'){
+        //sh """
+        //yarn cache clean --force
+         //rm package-lock.json || true
+         //rm -r node_modules || true
+         //CHROMEDRIVER_SKIP_DOWNLOAD=true
+         //rm -f .npmrc
+         //yarn install --yes
+      //"""
+    //}
+    //stage('Build Package'){
+       //sh 'yarn run build'
+    //}
+
+
+
+    stage ('Docker Build'){
+        sh """
+        docker build --rm -t image.mylab-siab.com/atm-dev/${appName}-v${appMajorVersion}:${appFullVersion} .
+      """
+    }
+
+    stage ('Docker Push'){
+        sh """
+        docker push image.mylab-siab.com/atm-dev/${appName}-v${appMajorVersion}:${appFullVersion}
+      """
+    }
+    stage ('Deploy to GKE'){
+
+            sh """
+            gcloud auth activate-service-account --key-file /root/gke-key-atmdev.json
+            gcloud container clusters get-credentials atmbusiness-dev --zone asia-southeast2-a --project atmbusiness-dev
+            kubectl apply -f ./cicd-template/kubernetes-external/deployment.yaml -n ${namespace}
+            kubectl apply -f ./cicd-template/kubernetes-external/ingress.yaml -n ${namespace} --validate=false
+            """
+    }
+    stage ('Rollout'){
+        sh """
+        kubectl rollout restart deployment ${appName}-v${appMajorVersion} -n ${namespace}
+      """
+    }
+}
+
+def getFromPom(key) {
+    sh(returnStdout: true, script: "mvn -U -s ./cicd-template/maven/settings.xml -q -Dexec.executable=echo -Dexec.args='\${project.${key}}' --non-recursive exec:exec").trim()
+}
+
+
+
+def parameterTemplatedeployment(appName, appMajorVersion, appFullVersion) {
+    parameter = readFile('./cicd-template/kubernetes-external/deployment.yaml')
+    parameter = parameter.replaceAll('\\$APP_NAME', appName)
+    parameter = parameter.replaceAll('\\$APP_MAJOR_VERSION', appMajorVersion)
+    parameter = parameter.replaceAll('\\$APP_FULL_VERSION', appFullVersion)
+
+    writeFile file: './cicd-template/kubernetes-external/deployment.yaml', text: parameter
+}
+
+def parameterTemplateingress(appName, appMajorVersion, micrositeName) {
+    parameter = readFile('./cicd-template/kubernetes-external/ingress.yaml')
+    parameter = parameter.replaceAll('\\$APP_NAME', appName)
+    parameter = parameter.replaceAll('\\$APP_MAJOR_VERSION', appMajorVersion)
+    parameter = parameter.replaceAll('\\$APP_ROUTE_PATH', micrositeName)
+
+    writeFile file: './cicd-template/kubernetes-external/ingress.yaml', text: parameter
+}
+
+
+

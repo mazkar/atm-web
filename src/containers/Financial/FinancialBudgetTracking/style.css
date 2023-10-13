@@ -1,0 +1,23 @@
+.select-ledger {
+    top: 10px;
+    width: 120px;
+}
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+    height: 32px;
+    border-radius: 7px;
+}
+
+.full-year-budget {
+    margin-top: 10px;
+    width: 200px;
+    height: 32px;
+    border-radius: 6px; 
+    padding: 10px;
+    border: 1px solid #d9d9d9;
+    outline: none;
+    text-align: start;
+}
+
+.buttonUploadFile:hover {
+    cursor: pointer;
+}

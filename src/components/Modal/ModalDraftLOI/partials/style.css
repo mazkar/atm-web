@@ -1,0 +1,38 @@
+.CommonSelect__select--bordered.ant-select-single:not(.ant-select-customize-input) .ant-select-selector {
+    height: 40px;
+    padding: 4px 11px 4px;
+    border: 1px solid #BCC8E7;
+    border-radius: 8px;
+    color: var(--dark);
+}
+
+.CommonSelect__select--bordered.ant-select-single:not(.ant-select-customize-input) .ant-select-selection-item {
+    font-size: 13px;
+}
+
+.CommonSelect__select-icon .icon {
+    fill: var(--red-hard);
+}
+
+.DateSelect.ant-picker {
+    width: 140px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    padding-left: 12px;
+    padding-right: 12px;
+    border-radius: 8px;
+    border: 1px solid #BCC8E7;
+}
+
+.DateSelect .ant-picker-input input {
+    font-size: 13px;
+}
+
+.DateSelect__icon .icon {
+    fill: var(--red-hard);
+}
+
+.MuiTypography-root.MuiFormControlLabel-label.MuiTypography-body1 {
+    font-size: 15px;
+}

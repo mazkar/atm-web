@@ -1,0 +1,11 @@
+th.MuiTableCell-root.MuiTableCell-head{
+  background: none;
+}
+.tableMP .MuiTableCell-body .MuiTypography-body1 {
+  width: 100% !important;
+  max-width: 580px !important;
+}
+/* 
+div.MuiPaper-root.MuiPaper-elevation1.MuiPaper-rounded {
+  border-radius: 10px;
+} */

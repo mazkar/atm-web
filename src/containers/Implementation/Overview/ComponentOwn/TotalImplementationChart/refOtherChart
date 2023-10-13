@@ -1,0 +1,74 @@
+import React from "react";
+import {
+  G2,
+  Chart,
+  Tooltip,
+  Interval,
+} from "bizcharts";
+
+function Grouped() {
+  const scale = {
+    target: {
+      min: 0,
+      max: 100,
+    },
+    value: {
+      min: 0,
+      max: 100,
+    },
+  };
+  return (
+    <Chart height={300} padding="auto" data={data} autoFit scale={scale}>
+		<Interval
+        color={['openingType', ['#95B6FF', '#FFCF87', '#FF928F', '#9FFFA9']]}
+        shape="border-radius"
+        position="month*target"
+        adjust={[
+         {
+            type: 'dodge',
+                marginRatio: 1 / 32
+          },
+        ]}
+      />
+
+      <Interval
+        adjust={[
+         {
+            type: 'dodge',
+                marginRatio: 1 / 32
+          },
+        ]}
+        color={['openingType', ['#3356A2', '#FA9B0C', '#DC241F', '#65D170']]}
+        position="month*value"
+      />
+      <Tooltip shared />
+    </Chart>
+  );
+}
+
+const data = [
+  { openingType: 'New', month: 'Jan.', value: 18.9, target: 28 },
+  { openingType: 'New', month: 'Feb.', value: 28.8, target: 38 },
+  { openingType: 'New', month: 'Mar.', value: 39.3, target: 49 },
+  { openingType: 'New', month: 'Apr.', value: 41.4, target: 61 },
+  { openingType: 'New', month: 'May', value: 47, target: 57 },
+  { openingType: 'Replace', month: 'Jan.', value: 12.4, target: 22 },
+  { openingType: 'Replace', month: 'Feb.', value: 23.2, target: 33 },
+  { openingType: 'Replace', month: 'Mar.', value: 34.5, target: 44 },
+  { openingType: 'Replace', month: 'Apr.', value: 39.7, target: 50 },
+  { openingType: 'Replace', month: 'May', value: 52.6, target: 62 },
+  { openingType: 'Termin', month: 'Jan.', value: 18.9, target: 28 },
+  { openingType: 'Termin', month: 'Feb.', value: 28.8, target: 38 },
+  { openingType: 'Termin', month: 'Mar.', value: 39.3, target: 49 },
+  { openingType: 'Termin', month: 'Apr.', value: 41.4, target: 61 },
+  { openingType: 'Termin', month: 'May', value: 47, target: 57 },
+  { openingType: 'Migrasi', month: 'Jan.', value: 12.4, target: 22 },
+  { openingType: 'Migrasi', month: 'Feb.', value: 23.2, target: 33 },
+  { openingType: 'Migrasi', month: 'Mar.', value: 34.5, target: 44 },
+  { openingType: 'Migrasi', month: 'Apr.', value: 39.7, target: 50 },
+  { openingType: 'Migrasi', month: 'May', value: 52.6, target: 62 },
+];
+
+
+
+ReactDOM.render(<Grouped />, mountNode)

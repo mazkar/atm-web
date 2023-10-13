@@ -1,0 +1,49 @@
+.edit-new-atm-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-new-atm-container .location-search-item {
+  display: flex;
+  flex-direction: row;
+  margin-top: 20px;
+  justify-content: space-between;
+}
+
+.edit-new-atm-container .button-submit {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.edit-new-atm-container .button-submit .saved-button {
+  color: red;
+  background-color: white;
+  border: none;
+}
+
+.edit-new-atm-container .input-form {
+  margin-top: 10px;
+  margin-bottom: 15px;
+  height: 40px;
+}
+
+.edit-new-atm-container .requester-form {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.edit-new-atm-container .requester-form .requester-button {
+  width: 100%;
+  height: 40px;
+  background-color: #dc241f;
+  border: solid white 1px;
+}
+
+.edit-new-atm-container .location-search-item .location-button {
+  width: 100%;
+  height: 40px;
+  /* background-color: #DC241F; */
+  border: solid white 1px;
+}

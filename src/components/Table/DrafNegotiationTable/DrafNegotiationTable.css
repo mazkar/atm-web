@@ -1,0 +1,25 @@
+.table-header {
+    margin: 10px 0;
+    background: #DC241F;
+    padding: 9px 10px;
+}
+
+.right-style-white {
+    text-align: left;
+    color: #ffffff;
+}
+
+.center-style-white {
+    text-align: center;
+    color: #ffffff;
+}
+
+.right-style-black {
+    text-align: left;
+    color: #000000;
+}
+
+.center-style-black {
+    text-align: center;
+    color: #000000;
+}

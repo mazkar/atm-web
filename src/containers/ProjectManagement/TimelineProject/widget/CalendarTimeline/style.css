@@ -1,0 +1,13 @@
+.css-1vam7s3-MuiGrid-root {
+  box-sizing: border-box;
+
+  display: none;
+}
+
+.css-gyiown .VerticalAppointment-textContainer {
+  line-height: 1;
+  white-space: pre-wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: none;
+}
